@@ -138,9 +138,7 @@ fun MainScreen(userName: String, userId: Int) {
             }
 
             composable(BottomNavItem.Profile.route) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Экран 'Профиль' в разработке")
-                }
+                ProfileScreen(userId = userId)
             }
         }
     }

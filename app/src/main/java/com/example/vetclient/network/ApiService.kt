@@ -118,6 +118,26 @@ data class OrderResponse(
     val order_id: Int?
 )
 
+// Модели для профиля
+data class UserProfile(
+    val full_name: String,
+    val email: String,
+    val phone: String
+)
+
+// Модели для пожертвований
+data class Fundraising(
+    val id: Int,
+    val title: String,
+    val goal_amount: String
+)
+
+data class DonationRequest(
+    val user_id: Int,
+    val fundraising_id: Int,
+    val amount: Double
+)
+
 interface ApiService {
     @POST("register.php")
     suspend fun registerUser(@Body request: RegisterRequest): Response<AuthResponse>
@@ -154,4 +174,13 @@ interface ApiService {
 
     @POST("create_order.php")
     suspend fun createOrder(@Body request: CreateOrderRequest): Response<OrderResponse>
+
+    @GET("get_profile.php")
+    suspend fun getProfile(@Query("user_id") userId: Int): Response<UserProfile>
+
+    @GET("get_donations.php")
+    suspend fun getDonations(): Response<List<Fundraising>>
+
+    @POST("make_donation.php")
+    suspend fun makeDonation(@Body request: DonationRequest): Response<AuthResponse>
 }
