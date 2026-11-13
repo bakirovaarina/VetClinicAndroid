@@ -134,9 +134,7 @@ fun MainScreen(userName: String, userId: Int) {
             }
 
             composable(BottomNavItem.Shop.route) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Экран 'Магазин' в разработке")
-                }
+                ShopScreen()
             }
 
             composable(BottomNavItem.Profile.route) {

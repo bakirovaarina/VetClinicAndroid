@@ -92,6 +92,16 @@ data class HistoryItem(
     val recommendations: String?
 )
 
+// Модель для товара
+data class Product(
+    val id: Int,
+    val name: String,
+    val price: String,
+    val stock_qty: Int,
+    val category: String
+)
+
+
 interface ApiService {
     @POST("register.php")
     suspend fun registerUser(@Body request: RegisterRequest): Response<AuthResponse>
@@ -123,5 +133,6 @@ interface ApiService {
     @GET("get_history.php")
     suspend fun getHistory(@Query("pet_id") petId: Int): Response<List<HistoryItem>>
 
-
+    @GET("get_products.php")
+    suspend fun getProducts(): Response<List<Product>>
 }
