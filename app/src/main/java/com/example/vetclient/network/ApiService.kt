@@ -101,6 +101,22 @@ data class Product(
     val category: String
 )
 
+// Модели для заказа
+data class OrderItem(
+    val product_id: Int,
+    val quantity: Int
+)
+
+data class CreateOrderRequest(
+    val user_id: Int,
+    val items: List<OrderItem>
+)
+
+data class OrderResponse(
+    val status: String,
+    val message: String,
+    val order_id: Int?
+)
 
 interface ApiService {
     @POST("register.php")
@@ -135,4 +151,7 @@ interface ApiService {
 
     @GET("get_products.php")
     suspend fun getProducts(): Response<List<Product>>
+
+    @POST("create_order.php")
+    suspend fun createOrder(@Body request: CreateOrderRequest): Response<OrderResponse>
 }

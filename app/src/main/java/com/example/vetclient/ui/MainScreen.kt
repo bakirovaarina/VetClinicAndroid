@@ -134,7 +134,7 @@ fun MainScreen(userName: String, userId: Int) {
             }
 
             composable(BottomNavItem.Shop.route) {
-                ShopScreen()
+                ShopScreen(userId = userId)
             }
 
             composable(BottomNavItem.Profile.route) {
