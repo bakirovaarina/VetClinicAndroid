@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.Alignment
 
 sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomNavItem("home", "Главная", Icons.Default.Home)
@@ -103,8 +104,19 @@ fun MainScreen(userName: String, userId: Int) {
                 }
             }
             composable(BottomNavItem.Appointments.route) {
-                Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    Text("Экран 'Запись' в разработке")
+                val petsViewModel: PetsViewModel = viewModel()
+                LaunchedEffect(userId) {
+                    petsViewModel.loadPets(userId)
+                }
+                if (petsViewModel.isLoading) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                } else {
+                    BookingScreen(
+                        userId = userId,
+                        pets = petsViewModel.pets,
+                        onBookingSuccess = {
+                        }
+                    )
                 }
             }
             composable(BottomNavItem.Shop.route) {
