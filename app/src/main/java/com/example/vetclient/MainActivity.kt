@@ -28,8 +28,8 @@ class MainActivity : ComponentActivity() {
                         // Экран Входа
                         composable("login") {
                             LoginScreen(
-                                onLoginSuccess = { name ->
-                                    navController.navigate("main/$name") {
+                                onLoginSuccess = { name, id ->
+                                    navController.navigate("main/$name/$id") {
                                         popUpTo("login") { inclusive = true }
                                     }
                                 },
@@ -53,9 +53,10 @@ class MainActivity : ComponentActivity() {
                         }
 
                         // Главный экран
-                        composable("main/{userName}") { backStackEntry ->
+                        composable("main/{userName}/{userId}") { backStackEntry ->
                             val userName = backStackEntry.arguments?.getString("userName") ?: "Гость"
-                            MainScreen(userName = userName)
+                            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
+                            MainScreen(userName = userName, userId = userId)
                         }
                     }
                 }
