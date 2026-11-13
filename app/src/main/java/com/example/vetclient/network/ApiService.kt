@@ -81,6 +81,17 @@ data class BookRequest(
     val service_id: Int
 )
 
+// Модель для истории
+data class HistoryItem(
+    val appointment_id: Int,
+    val date: String,
+    val service_name: String,
+    val doctor_name: String,
+    val diagnosis: String?,
+    val prescriptions: String?,
+    val recommendations: String?
+)
+
 interface ApiService {
     @POST("register.php")
     suspend fun registerUser(@Body request: RegisterRequest): Response<AuthResponse>
@@ -108,6 +119,9 @@ interface ApiService {
 
     @POST("book_appointment.php")
     suspend fun bookAppointment(@Body request: BookRequest): Response<AuthResponse>
+
+    @GET("get_history.php")
+    suspend fun getHistory(@Query("pet_id") petId: Int): Response<List<HistoryItem>>
 
 
 }

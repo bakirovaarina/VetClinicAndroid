@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -15,7 +16,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.Alignment
 
 sealed class BottomNavItem(val route: String, val title: String, val icon: ImageVector) {
     object Home : BottomNavItem("home", "Главная", Icons.Default.Home)
@@ -73,6 +73,7 @@ fun MainScreen(userName: String, userId: Int) {
             composable(BottomNavItem.Home.route) {
                 HomeScreen(userName = userName)
             }
+
             composable(BottomNavItem.Pets.route) {
                 val petsViewModel: PetsViewModel = viewModel()
                 val petsNavController = rememberNavController()
@@ -84,6 +85,9 @@ fun MainScreen(userName: String, userId: Int) {
                             onNavigateToEdit = { pet ->
                                 petsViewModel.editingPet = pet
                                 petsNavController.navigate("pets_edit")
+                            },
+                            onNavigateToHistory = { pet ->
+                                petsNavController.navigate("pets_history/${pet.id}")
                             },
                             viewModel = petsViewModel
                         )
@@ -101,8 +105,16 @@ fun MainScreen(userName: String, userId: Int) {
                             onNavigateBack = { petsNavController.popBackStack() }
                         )
                     }
+                    composable("pets_history/{petId}") { backStackEntry ->
+                        val petId = backStackEntry.arguments?.getString("petId")?.toIntOrNull() ?: 0
+                        HistoryScreen(
+                            petId = petId,
+                            onNavigateBack = { petsNavController.popBackStack() }
+                        )
+                    }
                 }
             }
+
             composable(BottomNavItem.Appointments.route) {
                 val petsViewModel: PetsViewModel = viewModel()
                 LaunchedEffect(userId) {
@@ -115,17 +127,20 @@ fun MainScreen(userName: String, userId: Int) {
                         userId = userId,
                         pets = petsViewModel.pets,
                         onBookingSuccess = {
+                            navController.navigate(BottomNavItem.Home.route)
                         }
                     )
                 }
             }
+
             composable(BottomNavItem.Shop.route) {
-                Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Экран 'Магазин' в разработке")
                 }
             }
+
             composable(BottomNavItem.Profile.route) {
-                Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Экран 'Профиль' в разработке")
                 }
             }

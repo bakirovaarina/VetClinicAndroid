@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -67,6 +68,7 @@ fun PetsScreen(
     userId: Int,
     onNavigateToAdd: () -> Unit,
     onNavigateToEdit: (Pet) -> Unit,
+    onNavigateToHistory: (Pet) -> Unit,
     viewModel: PetsViewModel = viewModel()
 ) {
     LaunchedEffect(userId) {
@@ -128,6 +130,9 @@ fun PetsScreen(
                                 if (pet.weight_kg != null) {
                                     Text("Вес: ${pet.weight_kg} кг", fontSize = 14.sp, color = Color.Gray)
                                 }
+                            }
+                            IconButton(onClick = { onNavigateToHistory(pet) }) {
+                                Icon(Icons.Default.List, contentDescription = "История лечения", tint = Color.Blue)
                             }
                             IconButton(onClick = { onNavigateToEdit(pet) }) {
                                 Icon(Icons.Default.Edit, contentDescription = "Редактировать", tint = VetGreen)
