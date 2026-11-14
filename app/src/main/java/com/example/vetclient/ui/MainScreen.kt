@@ -26,7 +26,7 @@ sealed class BottomNavItem(val route: String, val title: String, val icon: Image
 }
 
 @Composable
-fun MainScreen(userName: String, userId: Int) {
+fun MainScreen(userName: String, userId: Int, onLogout: () -> Unit) {
     val navController = rememberNavController()
     val items = listOf(
         BottomNavItem.Home,
@@ -138,7 +138,7 @@ fun MainScreen(userName: String, userId: Int) {
             }
 
             composable(BottomNavItem.Profile.route) {
-                ProfileScreen(userId = userId)
+                ProfileScreen(userId = userId, onLogout = onLogout)
             }
         }
     }

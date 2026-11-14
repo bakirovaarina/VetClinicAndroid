@@ -145,6 +145,18 @@ data class UserProfile(
     val phone: String
 )
 
+data class UpdateProfileRequest(
+    val user_id: Int,
+    val full_name: String,
+    val phone: String
+)
+
+data class ChangePasswordRequest(
+    val user_id: Int,
+    val old_password: String,
+    val new_password: String
+)
+
 // Модели для пожертвований
 data class Fundraising(
     val id: Int,
@@ -209,4 +221,10 @@ interface ApiService {
 
     @POST("cancel_appointment.php")
     suspend fun cancelAppointment(@Body request: CancelAppointmentRequest): Response<AuthResponse>
+
+    @POST("update_profile.php")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): Response<AuthResponse>
+
+    @POST("change_password.php")
+    suspend fun changePassword(@Body request: ChangePasswordRequest): Response<AuthResponse>
 }
