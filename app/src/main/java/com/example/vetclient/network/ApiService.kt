@@ -103,7 +103,13 @@ data class HistoryItem(
     val doctor_name: String,
     val diagnosis: String?,
     val prescriptions: String?,
-    val recommendations: String?
+    val recommendations: String?,
+    val category_id: Int,
+    val status_name: String?
+)
+
+data class CancelAppointmentRequest(
+    val appointment_id: Int
 )
 
 // Модель для товара
@@ -200,4 +206,7 @@ interface ApiService {
 
     @POST("make_donation.php")
     suspend fun makeDonation(@Body request: DonationRequest): Response<AuthResponse>
+
+    @POST("cancel_appointment.php")
+    suspend fun cancelAppointment(@Body request: CancelAppointmentRequest): Response<AuthResponse>
 }
