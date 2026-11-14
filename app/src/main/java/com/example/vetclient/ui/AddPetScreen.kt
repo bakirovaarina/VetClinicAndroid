@@ -78,11 +78,53 @@ fun AddPetScreen(
     var weight by remember { mutableStateOf(petToEdit?.weight_kg ?: "") }
     var species by remember { mutableStateOf(petToEdit?.species ?: "") }
 
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var speciesError by remember { mutableStateOf<String?>(null) }
+    var weightError by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(viewModel.isSuccess) {
         if (viewModel.isSuccess) {
             kotlinx.coroutines.delay(1500)
             onNavigateBack()
         }
+    }
+
+    fun validate(): Boolean {
+        nameError = null
+        speciesError = null
+        weightError = null
+        var isValid = true
+
+        if (name.isBlank()) {
+            nameError = "Поле не может быть пустым"
+            isValid = false
+        } else if (name.trim().length < 2) {
+            nameError = "Кличка должна быть не менее 2 символов"
+            isValid = false
+        } else if (!name.matches(Regex("^[А-Яа-яЁёA-Za-z ]+$"))) {
+            nameError = "Кличка может содержать только буквы"
+            isValid = false
+        }
+
+        if (species.isBlank()) {
+            speciesError = "Поле не может быть пустым"
+            isValid = false
+        } else if (species.trim().length < 2) {
+            speciesError = "Введите вид животного (минимум 2 символа)"
+            isValid = false
+        } else if (!species.matches(Regex("^[А-Яа-яЁёA-Za-z ]+$"))) {
+            speciesError = "Вид должен содержать только буквы"
+            isValid = false
+        }
+
+        if (weight.isNotBlank()) {
+            val weightValue = weight.toDoubleOrNull()
+            if (weightValue == null || weightValue <= 0 || weightValue > 100) {
+                weightError = "Введите корректный вес (от 0.1 до 100 кг)"
+                isValid = false
+            }
+        }
+        return isValid
     }
 
     Column(
@@ -94,8 +136,13 @@ fun AddPetScreen(
 
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = {
+                name = it
+                nameError = null
+            },
             label = { Text("Кличка") },
+            isError = nameError != null,
+            supportingText = { nameError?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
@@ -103,8 +150,13 @@ fun AddPetScreen(
 
         OutlinedTextField(
             value = species,
-            onValueChange = { species = it },
+            onValueChange = {
+                species = it
+                speciesError = null
+            },
             label = { Text("Вид животного (например, Собака)") },
+            isError = speciesError != null,
+            supportingText = { speciesError?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
@@ -118,10 +170,18 @@ fun AddPetScreen(
             shape = RoundedCornerShape(12.dp)
         )
         Spacer(modifier = Modifier.height(12.dp))
+
         OutlinedTextField(
             value = weight,
-            onValueChange = { weight = it },
+            onValueChange = {
+                if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
+                    weight = it
+                    weightError = null
+                }
+            },
             label = { Text("Вес (кг, необязательно)") },
+            isError = weightError != null,
+            supportingText = { weightError?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp)
         )
@@ -132,7 +192,11 @@ fun AddPetScreen(
             CircularProgressIndicator(color = VetGreen)
         } else {
             Button(
-                onClick = { viewModel.savePet(userId, name, species, breed, weight, petToEdit?.id) },
+                onClick = {
+                    if (validate()) {
+                        viewModel.savePet(userId, name, species, breed, weight, petToEdit?.id)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
             ) {

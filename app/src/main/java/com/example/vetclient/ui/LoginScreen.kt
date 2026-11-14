@@ -74,10 +74,41 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(viewModel.loggedInUserName, viewModel.loggedInUserId) {
         if (viewModel.loggedInUserName != null && viewModel.loggedInUserId != null) {
             onLoginSuccess(viewModel.loggedInUserName!!, viewModel.loggedInUserId!!)
         }
+    }
+
+    fun validate(): Boolean {
+        emailError = null
+        passwordError = null
+        var isValid = true
+
+        if (email.isBlank()) {
+            emailError = "Поле не может быть пустым"
+            isValid = false
+        } else {
+            val emailRegex = Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")
+            if (!emailRegex.matches(email)) {
+                emailError = "Некорректный email. Пример: name@mail.ru"
+                isValid = false
+            }
+        }
+        if (password.isBlank()) {
+            passwordError = "Поле не может быть пустым"
+            isValid = false
+        } else if (password.length < 6) {
+            passwordError = "Пароль должен быть не менее 6 символов"
+            isValid = false
+        } else if (password.contains(" ")) {
+            passwordError = "Пароль не должен содержать пробелов"
+            isValid = false
+        }
+        return isValid
     }
 
     Box(
@@ -114,8 +145,13 @@ fun LoginScreen(
 
             OutlinedTextField(
                 value = email,
-                onValueChange = { newValue: String -> email = newValue },
+                onValueChange = {
+                    email = it
+                    emailError = null
+                },
                 label = { Text("Email") },
+                isError = emailError != null,
+                supportingText = { emailError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -123,7 +159,10 @@ fun LoginScreen(
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { newValue: String -> password = newValue },
+                onValueChange = {
+                    password = it
+                    passwordError = null
+                },
                 label = { Text("Пароль") },
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -135,6 +174,8 @@ fun LoginScreen(
                         )
                     }
                 },
+                isError = passwordError != null,
+                supportingText = { passwordError?.let { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -155,7 +196,11 @@ fun LoginScreen(
                 CircularProgressIndicator(color = Color(0xFF00897B))
             } else {
                 Button(
-                    onClick = { viewModel.login(email, password) },
+                    onClick = {
+                        if (validate()) {
+                            viewModel.login(email, password)
+                        }
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
