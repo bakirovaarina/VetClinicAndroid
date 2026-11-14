@@ -66,9 +66,21 @@ data class AddPetRequest(
 data class DeletePetRequest(val id: Int)
 
 // Модели для записи
-data class Service(val id: Int, val name: String, val price: String)
+data class Service(
+    val id: Int,
+    val name: String,
+    val price: String,
+    val employee_id: Int?
+)
 data class Doctor(val id: Int, val full_name: String)
-data class Slot(val id: Int, val start_at: String, val end_at: String, val doctor_name: String)
+
+data class Slot(
+    val id: Int,
+    val start_at: String,
+    val end_at: String,
+    val doctor_name: String,
+    val employee_id: Int
+)
 
 data class BookingData(
     val services: List<Service>,
@@ -163,7 +175,10 @@ interface ApiService {
     suspend fun updatePet(@Body request: AddPetRequest): Response<AuthResponse>
 
     @GET("get_booking_data.php")
-    suspend fun getBookingData(@Query("date") date: String? = null): Response<BookingData>
+    suspend fun getBookingData(
+        @Query("date") date: String? = null,
+        @Query("category") category: String? = null
+    ): Response<BookingData>
 
     @POST("book_appointment.php")
     suspend fun bookAppointment(@Body request: BookRequest): Response<AuthResponse>
