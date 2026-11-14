@@ -127,6 +127,9 @@ fun PetsScreen(
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(pet.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = VetGreen)
                                 Text("${pet.species} • ${pet.breed ?: "Порода не указана"}", fontSize = 14.sp, color = Color.Gray)
+                                if (pet.age != null) {
+                                    Text("Возраст: ${pet.age} лет", fontSize = 14.sp, color = Color.Gray)
+                                }
                                 if (pet.weight_kg != null) {
                                     Text("Вес: ${pet.weight_kg} кг", fontSize = 14.sp, color = Color.Gray)
                                 }

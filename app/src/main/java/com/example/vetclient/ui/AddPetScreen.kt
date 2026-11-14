@@ -22,7 +22,7 @@ class AddPetViewModel : ViewModel() {
     var isError by mutableStateOf(false)
     var isSuccess by mutableStateOf(false)
 
-    fun savePet(userId: Int, name: String, species: String, breed: String, weight: String, petId: Int? = null) {
+    fun savePet(userId: Int, name: String, species: String, breed: String, weight: String, age: String, petId: Int? = null) {
         isLoading = true
         message = ""
         viewModelScope.launch {
@@ -33,7 +33,8 @@ class AddPetViewModel : ViewModel() {
                     name = name,
                     breed = breed.ifBlank { null },
                     species = species,
-                    weight_kg = weight.ifBlank { null }
+                    weight_kg = weight.ifBlank { null },
+                    age = age.ifBlank { null }
                 )
 
                 val response = if (petId == null) {
@@ -77,10 +78,12 @@ fun AddPetScreen(
     var breed by remember { mutableStateOf(petToEdit?.breed ?: "") }
     var weight by remember { mutableStateOf(petToEdit?.weight_kg ?: "") }
     var species by remember { mutableStateOf(petToEdit?.species ?: "") }
+    var age by remember { mutableStateOf("") }
 
     var nameError by remember { mutableStateOf<String?>(null) }
     var speciesError by remember { mutableStateOf<String?>(null) }
     var weightError by remember { mutableStateOf<String?>(null) }
+    var ageError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(viewModel.isSuccess) {
         if (viewModel.isSuccess) {
@@ -93,6 +96,7 @@ fun AddPetScreen(
         nameError = null
         speciesError = null
         weightError = null
+        ageError = null
         var isValid = true
 
         if (name.isBlank()) {
@@ -121,6 +125,14 @@ fun AddPetScreen(
             val weightValue = weight.toDoubleOrNull()
             if (weightValue == null || weightValue <= 0 || weightValue > 100) {
                 weightError = "Введите корректный вес (от 0.1 до 100 кг)"
+                isValid = false
+            }
+        }
+
+        if (age.isNotBlank()) {
+            val ageValue = age.toIntOrNull()
+            if (ageValue == null || ageValue <= 0 || ageValue > 50) {
+                ageError = "Введите корректный возраст (от 1 до 50 лет)"
                 isValid = false
             }
         }
@@ -186,6 +198,23 @@ fun AddPetScreen(
             shape = RoundedCornerShape(12.dp)
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = age,
+            onValueChange = {
+                if (it.isEmpty() || it.matches(Regex("^\\d*$"))) {
+                    age = it
+                    ageError = null
+                }
+            },
+            label = { Text("Возраст (лет, необязательно)") },
+            isError = ageError != null,
+            supportingText = { ageError?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
 
         if (viewModel.isLoading) {
@@ -194,7 +223,7 @@ fun AddPetScreen(
             Button(
                 onClick = {
                     if (validate()) {
-                        viewModel.savePet(userId, name, species, breed, weight, petToEdit?.id)
+                        viewModel.savePet(userId, name, species, breed, weight, age, petToEdit?.id)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),

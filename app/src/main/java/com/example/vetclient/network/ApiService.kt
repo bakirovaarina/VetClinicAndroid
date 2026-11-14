@@ -49,7 +49,8 @@ data class Pet(
     val breed: String?,
     val birth_date: String?,
     val weight_kg: String?,
-    val species: String
+    val species: String,
+    val age: Int?
 )
 
 data class AddPetRequest(
@@ -58,7 +59,8 @@ data class AddPetRequest(
     val name: String,
     val breed: String?,
     val species: String,
-    val weight_kg: String?
+    val weight_kg: String?,
+    val age: String?
 )
 
 data class DeletePetRequest(val id: Int)
