@@ -196,6 +196,16 @@ fun ProfileScreen(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = { profileNavController.navigate("orders") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
+                    ) {
+                        Text("Мои заказы")
+                    }
+
                     Spacer(modifier = Modifier.weight(1f))
 
                     Button(
@@ -233,6 +243,13 @@ fun ProfileScreen(
 
         composable("help") {
             HelpScreen(
+                userId = userId,
+                onNavigateBack = { profileNavController.popBackStack() }
+            )
+        }
+
+        composable("orders") {
+            OrdersScreen(
                 userId = userId,
                 onNavigateBack = { profileNavController.popBackStack() }
             )

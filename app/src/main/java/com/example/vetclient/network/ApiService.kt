@@ -118,10 +118,23 @@ data class Product(
     val name: String,
     val price: String,
     val stock_qty: Int,
-    val category: String
+    val category: String,
+    val image_url: String?
 )
 
 // Модели для заказа
+data class Order(
+    val id: Int,
+    val created_at: String,
+    val status_id: Int,
+    val status_name: String?,
+    val total_amount: String?
+)
+
+data class CancelOrderRequest(
+    val order_id: Int
+)
+
 data class OrderItem(
     val product_id: Int,
     val quantity: Int
@@ -135,7 +148,8 @@ data class CreateOrderRequest(
 data class OrderResponse(
     val status: String,
     val message: String,
-    val order_id: Int?
+    val order_id: Int?,
+    val total_amount: Double?
 )
 
 // Модели для профиля
@@ -205,7 +219,10 @@ interface ApiService {
     suspend fun getHistory(@Query("pet_id") petId: Int): Response<List<HistoryItem>>
 
     @GET("get_products.php")
-    suspend fun getProducts(): Response<List<Product>>
+    suspend fun getProducts(
+        @Query("category") category: String? = null,
+        @Query("search") search: String? = null
+    ): Response<List<Product>>
 
     @POST("create_order.php")
     suspend fun createOrder(@Body request: CreateOrderRequest): Response<OrderResponse>
@@ -227,4 +244,10 @@ interface ApiService {
 
     @POST("change_password.php")
     suspend fun changePassword(@Body request: ChangePasswordRequest): Response<AuthResponse>
+
+    @GET("get_orders.php")
+    suspend fun getOrders(@Query("user_id") userId: Int): Response<List<Order>>
+
+    @POST("cancel_order.php")
+    suspend fun cancelOrder(@Body request: CancelOrderRequest): Response<AuthResponse>
 }

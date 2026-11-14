@@ -1,20 +1,24 @@
 package com.example.vetclient.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -23,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.vetclient.network.*
 import kotlinx.coroutines.launch
 
@@ -32,15 +37,22 @@ class ShopViewModel : ViewModel() {
     var errorMessage by mutableStateOf("")
     var cart by mutableStateOf<Map<Product, Int>>(emptyMap())
 
+    var selectedCategory by mutableStateOf("Все")
+    var searchQuery by mutableStateOf("")
+
     var orderMessage by mutableStateOf("")
     var isOrderSuccess by mutableStateOf(false)
     var lastOrderId by mutableStateOf<Int?>(null)
+    var lastOrderTotal by mutableStateOf(0.0)
 
     fun loadProducts() {
         isLoading = true
         viewModelScope.launch {
             try {
-                val response = ApiClient.apiService.getProducts()
+                val response = ApiClient.apiService.getProducts(
+                    category = if (selectedCategory == "Все") null else selectedCategory,
+                    search = searchQuery.ifBlank { null }
+                )
                 if (response.isSuccessful) {
                     products = response.body() ?: emptyList()
                 } else {
@@ -79,6 +91,7 @@ class ShopViewModel : ViewModel() {
     fun checkout(userId: Int) {
         if (cart.isEmpty()) return
 
+        val totalBeforeClear = getCartTotal()
         isLoading = true
         viewModelScope.launch {
             try {
@@ -90,6 +103,7 @@ class ShopViewModel : ViewModel() {
                     if (body?.status == "success") {
                         orderMessage = body.message
                         lastOrderId = body.order_id
+                        lastOrderTotal = body.total_amount ?: totalBeforeClear
                         isOrderSuccess = true
                         cart = emptyMap()
                         loadProducts()
@@ -139,6 +153,35 @@ fun ShopScreen(userId: Int, viewModel: ShopViewModel = viewModel()) {
                     Text("Магазин", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    OutlinedTextField(
+                        value = viewModel.searchQuery,
+                        onValueChange = {
+                            viewModel.searchQuery = it
+                            viewModel.loadProducts()
+                        },
+                        label = { Text("Поиск") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(listOf("Все", "Корма", "Игрушки", "Аксессуары")) { category ->
+                            FilterChip(
+                                selected = viewModel.selectedCategory == category,
+                                onClick = {
+                                    viewModel.selectedCategory = category
+                                    viewModel.loadProducts()
+                                },
+                                label = { Text(category) }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     if (viewModel.isLoading) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = VetGreen) }
                     } else {
@@ -150,6 +193,14 @@ fun ShopScreen(userId: Int, viewModel: ShopViewModel = viewModel()) {
                                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                 ) {
                                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        if (product.image_url != null) {
+                                            Image(
+                                                painter = rememberAsyncImagePainter(product.image_url),
+                                                contentDescription = null,
+                                                modifier = Modifier.size(80.dp).padding(end = 16.dp),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(product.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                             Text("${product.category} • Остаток: ${product.stock_qty} шт.", fontSize = 12.sp, color = Color.Gray)
@@ -186,7 +237,7 @@ fun ShopScreen(userId: Int, viewModel: ShopViewModel = viewModel()) {
         composable("success") {
             OrderSuccessScreen(
                 orderId = viewModel.lastOrderId,
-                total = viewModel.getCartTotal(),
+                total = viewModel.lastOrderTotal,
                 onNavigateToCatalog = {
                     shopNavController.navigate("catalog") {
                         popUpTo("catalog") { inclusive = true }
@@ -256,6 +307,20 @@ fun CartScreen(
                 Text("Итого: ${viewModel.getCartTotal()} руб.", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
 
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = VetGreen.copy(alpha = 0.1f))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Способ получения: Самовывоз", fontWeight = FontWeight.Bold)
+                        Text("Адрес: г. Москва, ул. Ленина, д. 10 (ВетКлиника)", fontSize = 14.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Оплата при получении. Пожалуйста, не забудьте забрать заказ в течение 3 дней.", fontSize = 12.sp, color = Color.Gray)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
                     onClick = {
                         viewModel.checkout(userId)
@@ -264,7 +329,7 @@ fun CartScreen(
                     modifier = Modifier.fillMaxWidth().height(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
                 ) {
-                    Text("Оформить заказ (самовывоз)")
+                    Text("Оформить заказ")
                 }
 
                 if (viewModel.orderMessage.isNotEmpty() && !viewModel.isOrderSuccess) {
@@ -307,6 +372,9 @@ fun OrderSuccessScreen(
                 Text("Сумма: ${total} руб.", fontSize = 16.sp)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Способ получения: Самовывоз", fontSize = 16.sp)
+                Text("Адрес: г. Москва, ул. Ленина, д. 10", fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Оплата при получении. Не забудьте забрать заказ в течение 3 дней.", fontSize = 12.sp, color = Color.Gray)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Статус: Новый", fontSize = 16.sp, color = Color.Gray)
             }
