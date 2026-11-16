@@ -15,15 +15,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.rememberAsyncImagePainter
+import com.example.vetclient.R
 import com.example.vetclient.network.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 
 class HomeViewModel : ViewModel() {
     var homeData by mutableStateOf<HomeData?>(null)
@@ -41,6 +44,20 @@ class HomeViewModel : ViewModel() {
             } finally {
                 isLoading = false
             }
+        }
+    }
+
+    fun getPickupDeadline(createdAt: String): String {
+        return try {
+            val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+            val created = format.parse(createdAt) ?: return "---"
+            val calendar = Calendar.getInstance()
+            calendar.time = created
+            calendar.add(Calendar.DAY_OF_YEAR, 3)
+            val outputFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            "до ${outputFormat.format(calendar.time)}"
+        } catch (e: Exception) {
+            "---"
         }
     }
 }
@@ -106,16 +123,14 @@ fun HomeScreen(
                                 fontSize = 12.sp
                             )
                         }
-                        if (viewModel.homeData?.promo?.image != null) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    model = viewModel.homeData?.promo?.image ?: "https://ir.ozone.ru/s3/multimedia-1-1/6810497437.jpg"
-                                ),
-                                contentDescription = null,
-                                modifier = Modifier.size(80.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
+                        Image(
+                            painter = painterResource(id = R.drawable.promo_image),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .padding(4.dp),
+                            contentScale = ContentScale.Fit
+                        )
                     }
                 }
             }
@@ -139,29 +154,52 @@ fun HomeScreen(
             item {
                 Text("Предстоящие события", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                 Spacer(modifier = Modifier.height(8.dp))
-                val next = viewModel.homeData?.next_appointment
-                if (next != null) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Image(
-                                painter = rememberAsyncImagePainter("https://ir.ozone.ru/s3/multimedia-1-1/6810497437.jpg"),
-                                contentDescription = null,
-                                modifier = Modifier.size(60.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(next.service_name, fontWeight = FontWeight.Bold)
-                                Text("${next.start_at} • ${next.doctor_name}", fontSize = 12.sp, color = Color.Gray)
+                val appointments = viewModel.homeData?.next_appointments ?: emptyList()
+                if (appointments.isNotEmpty()) {
+                    appointments.forEach { next ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                        ) {
+                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.DateRange, contentDescription = null, tint = VetGreen)
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(next.service_name, fontWeight = FontWeight.Bold)
+                                    Text("Питомец: ${next.pet_name}", fontSize = 12.sp, color = Color.DarkGray)
+                                    Text("${next.start_at} • ${next.doctor_name}", fontSize = 12.sp, color = Color.Gray)
+                                }
                             }
                         }
                     }
                 } else {
                     Text("Нет предстоящих событий", color = Color.Gray, fontSize = 14.sp)
+                }
+            }
+
+            item {
+                val readyOrders = viewModel.homeData?.ready_orders
+                if (readyOrders != null && readyOrders.isNotEmpty()) {
+                    Text("Заказы готовы к получению", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    readyOrders.forEach { order ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+                        ) {
+                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF2E7D32))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text("Заказ #${order.id}", fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                                    Text("Забрать ${viewModel.getPickupDeadline(order.created_at)}", fontSize = 12.sp, color = Color.Gray)
+                                    Text("Самовывоз: г. Москва, ул. Ленина, д. 10", fontSize = 12.sp, color = Color.Gray)
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -172,7 +210,6 @@ fun HomeScreen(
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5))
                 ) {
                     Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        // Иконка сердечка с крестиком (используем Favorite с прозрачностью)
                         Icon(
                             imageVector = Icons.Default.Favorite,
                             contentDescription = null,
@@ -199,7 +236,6 @@ fun HomeScreen(
                                 Text("Сделать взнос", color = Color(0xFF00897B), fontSize = 12.sp)
                             }
                         }
-                        // Желтая звездочка справа
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = null,

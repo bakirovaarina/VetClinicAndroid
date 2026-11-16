@@ -12,7 +12,8 @@ import retrofit2.http.Part
 
 // Модели для главного экрана
 data class HomeData(
-    val next_appointment: NextAppointment?,
+    val next_appointments: List<NextAppointment>,
+    val ready_orders: List<ReadyOrder>,
     val promo: Promo?
 )
 
@@ -20,7 +21,13 @@ data class NextAppointment(
     val id: Int,
     val start_at: String,
     val service_name: String,
-    val doctor_name: String
+    val doctor_name: String,
+    val pet_name: String
+)
+
+data class ReadyOrder(
+    val id: Int,
+    val created_at: String
 )
 
 data class Promo(
@@ -177,6 +184,11 @@ data class OrderResponse(
     val total_amount: Double?
 )
 
+data class UpdateOrderStatusRequest(
+    val order_id: Int,
+    val status_id: Int
+)
+
 // Модели для профиля
 data class UserProfile(
     val full_name: String,
@@ -285,4 +297,7 @@ interface ApiService {
         @Part("pet_id") petId: RequestBody,
         @Part photo: MultipartBody.Part
     ): Response<AuthResponse>
+
+    @POST("update_order_status.php")
+    suspend fun updateOrderStatus(@Body request: UpdateOrderStatusRequest): Response<AuthResponse>
 }

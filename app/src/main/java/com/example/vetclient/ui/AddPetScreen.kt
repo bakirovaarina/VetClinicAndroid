@@ -162,18 +162,9 @@ fun AddPetScreen(
     }
 
     LaunchedEffect(viewModel.isSuccess) {
-        if (viewModel.isSuccess) {
-            if (selectedImageUri != null && savedPetId != null && savedPetId != 0) {
-                val file = uriToFile(context, selectedImageUri!!)
-                if (file != null) {
-                    viewModel.uploadPhoto(savedPetId!!, file)
-                } else {
-                    onNavigateBack()
-                }
-            } else {
-                kotlinx.coroutines.delay(1000)
-                onNavigateBack()
-            }
+        if (viewModel.isSuccess && viewModel.message == "Фото загружено!") {
+            kotlinx.coroutines.delay(1000)
+            onNavigateBack()
         }
     }
 
@@ -346,6 +337,20 @@ fun AddPetScreen(
                             petId = petToEdit?.id,
                             onSuccess = { id ->
                                 savedPetId = id
+                                android.util.Log.d("PHOTO_DEBUG", "onSuccess id=$id, uri=$selectedImageUri")
+                                if (selectedImageUri != null) {
+                                    val file = uriToFile(context, selectedImageUri!!)
+                                    android.util.Log.d("PHOTO_DEBUG", "file=$file")
+                                    if (file != null) {
+                                        viewModel.uploadPhoto(id, file)
+                                    } else {
+                                        android.util.Log.e("PHOTO_DEBUG", "file is null, не могу загрузить")
+                                        onNavigateBack()
+                                    }
+                                } else {
+                                    android.util.Log.d("PHOTO_DEBUG", "uri is null, закрываем")
+                                    onNavigateBack()
+                                }
                             }
                         )
                     }
@@ -359,19 +364,10 @@ fun AddPetScreen(
 
         if (viewModel.message.isNotEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = if (viewModel.isError) Color(0xFFFFEBEE) else Color(0xFFE8F5E9)
-                ),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = viewModel.message,
-                    color = if (viewModel.isError) Color(0xFFC62828) else Color(0xFF2E7D32),
-                    modifier = Modifier.padding(12.dp),
-                    fontSize = 14.sp
-                )
-            }
+            Text(
+                text = viewModel.message,
+                color = if (viewModel.isError) Color.Red else Color.Green
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

@@ -3,6 +3,7 @@ package com.example.vetclient.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -107,7 +108,18 @@ fun OrdersScreen(userId: Int, onNavigateBack: () -> Unit, viewModel: OrdersViewM
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).padding(16.dp)) {
             if (viewModel.message.isNotEmpty()) {
-                Text(viewModel.message, color = VetGreen, modifier = Modifier.padding(bottom = 8.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = viewModel.message,
+                        color = Color(0xFF2E7D32),
+                        modifier = Modifier.padding(12.dp),
+                        fontSize = 14.sp
+                    )
+                }
             }
 
             if (viewModel.isLoading) {
@@ -131,16 +143,36 @@ fun OrdersScreen(userId: Int, onNavigateBack: () -> Unit, viewModel: OrdersViewM
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Text("Заказ #${order.id}", fontWeight = FontWeight.Bold)
-                                    Text(
-                                        order.status_name ?: "Новый",
-                                        color = when (order.status_name) {
-                                            "Новый" -> Color(0xFFFFA000)
-                                            "Выполнен" -> Color(0xFF388E3C)
-                                            "Отменен" -> Color(0xFFD32F2F)
-                                            else -> Color.Gray
-                                        },
-                                        fontWeight = FontWeight.Bold
-                                    )
+
+                                    val statusName = order.status_name ?: "Новый"
+                                    val statusColor = when (statusName) {
+                                        "Новый" -> Color(0xFFE3F2FD)
+                                        "В обработке" -> Color(0xFFFFF3E0)
+                                        "Готов к получению" -> Color(0xFFE8F5E9)
+                                        "Получен" -> Color(0xFFF5F5F5)
+                                        "Отменен" -> Color(0xFFFFEBEE)
+                                        else -> Color(0xFFF5F5F5)
+                                    }
+                                    val statusTextColor = when (statusName) {
+                                        "Новый" -> Color(0xFF1565C0)
+                                        "В обработке" -> Color(0xFFE65100)
+                                        "Готов к получению" -> Color(0xFF2E7D32)
+                                        "Получен" -> Color(0xFF616161)
+                                        "Отменен" -> Color(0xFFC62828)
+                                        else -> Color(0xFF616161)
+                                    }
+                                    Surface(
+                                        color = statusColor,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = statusName,
+                                            color = statusTextColor,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
                                 }
                                 Text("Сумма: ${order.total_amount} руб.", fontSize = 14.sp)
                                 Text("Забрать ${viewModel.getPickupDeadline(order.created_at)}", fontSize = 14.sp, color = VetGreen)
@@ -150,7 +182,11 @@ fun OrdersScreen(userId: Int, onNavigateBack: () -> Unit, viewModel: OrdersViewM
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Button(
                                         onClick = { viewModel.cancelOrder(order.id, userId) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFFFFEBEE),
+                                            contentColor = Color(0xFFC62828)
+                                        ),
+                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text("Отменить заказ")
