@@ -1,6 +1,7 @@
 package com.example.vetclient.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -16,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -132,86 +134,92 @@ fun ShopScreen(userId: Int, viewModel: ShopViewModel = viewModel()) {
 
     NavHost(navController = shopNavController, startDestination = "catalog") {
         composable("catalog") {
-            Scaffold(
-                floatingActionButton = {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF5F9F9))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Магазин", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     if (viewModel.getCartItemCount() > 0) {
                         ExtendedFloatingActionButton(
                             onClick = { shopNavController.navigate("cart") },
                             containerColor = VetGreen,
-                            contentColor = Color.White
+                            contentColor = Color.White,
+                            modifier = Modifier.height(40.dp)
                         ) {
                             Icon(Icons.Default.ShoppingCart, contentDescription = null)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Корзина (${viewModel.getCartItemCount()})")
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Корзина (${viewModel.getCartItemCount()})", fontSize = 12.sp)
                         }
                     }
                 }
-            ) { paddingValues ->
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)
-                ) {
-                    Text("Магазин", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-                    Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedTextField(
-                        value = viewModel.searchQuery,
-                        onValueChange = {
-                            viewModel.searchQuery = it
-                            viewModel.loadProducts()
-                        },
-                        label = { Text("Поиск") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
+                OutlinedTextField(
+                    value = viewModel.searchQuery,
+                    onValueChange = {
+                        viewModel.searchQuery = it
+                        viewModel.loadProducts()
+                    },
+                    label = { Text("Поиск") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(listOf("Все", "Корма", "Игрушки", "Аксессуары")) { category ->
-                            FilterChip(
-                                selected = viewModel.selectedCategory == category,
-                                onClick = {
-                                    viewModel.selectedCategory = category
-                                    viewModel.loadProducts()
-                                },
-                                label = { Text(category) }
-                            )
-                        }
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(listOf("Все", "Корма", "Игрушки", "Аксессуары")) { category ->
+                        FilterChip(
+                            selected = viewModel.selectedCategory == category,
+                            onClick = {
+                                viewModel.selectedCategory = category
+                                viewModel.loadProducts()
+                            },
+                            label = { Text(category) }
+                        )
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                    if (viewModel.isLoading) {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = VetGreen) }
-                    } else {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(viewModel.products) { product ->
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                                ) {
-                                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                        if (product.image_url != null) {
-                                            Image(
-                                                painter = rememberAsyncImagePainter(product.image_url),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(80.dp).padding(end = 16.dp),
-                                                contentScale = ContentScale.Crop
-                                            )
-                                        }
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(product.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                            Text("${product.category} • Остаток: ${product.stock_qty} шт.", fontSize = 12.sp, color = Color.Gray)
-                                            Text("${product.price} руб.", color = VetGreen, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                        }
-                                        IconButton(
-                                            onClick = { viewModel.addToCart(product) },
-                                            colors = IconButtonDefaults.iconButtonColors(containerColor = VetGreen.copy(alpha = 0.1f))
-                                        ) {
-                                            Icon(Icons.Default.Add, contentDescription = "Добавить", tint = VetGreen)
-                                        }
+                if (viewModel.isLoading) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = VetGreen) }
+                } else {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(viewModel.products) { product ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = Color.White),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    if (product.image_url != null) {
+                                        Image(
+                                            painter = rememberAsyncImagePainter(product.image_url),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(60.dp).clip(RoundedCornerShape(8.dp)),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                    }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(product.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                        Text("${product.category} • Остаток: ${product.stock_qty} шт.", fontSize = 12.sp, color = Color.Gray)
+                                        Text("${product.price} руб.", color = VetGreen, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                    }
+                                    IconButton(
+                                        onClick = { viewModel.addToCart(product) },
+                                        colors = IconButtonDefaults.iconButtonColors(containerColor = VetGreen.copy(alpha = 0.1f))
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = "Добавить", tint = VetGreen)
                                     }
                                 }
                             }
@@ -248,7 +256,6 @@ fun ShopScreen(userId: Int, viewModel: ShopViewModel = viewModel()) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
     viewModel: ShopViewModel,
@@ -256,85 +263,89 @@ fun CartScreen(
     onNavigateBack: () -> Unit,
     onOrderSuccess: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Корзина") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = VetGreen, titleContentColor = Color.White)
-            )
-        },
-        containerColor = Color(0xFFF5F9F9)
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F9F9))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (viewModel.cart.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Корзина пуста", color = Color.Gray)
-                }
-            } else {
-                LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(viewModel.cart.entries.toList()) { entry ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(entry.key.name, fontWeight = FontWeight.Bold)
-                                    Text("${entry.key.price} руб. x ${entry.value} шт.", color = Color.Gray, fontSize = 14.sp)
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Назад",
+                    tint = VetGreen
+                )
+            }
+            Text("Корзина", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (viewModel.cart.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Корзина пуста", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(viewModel.cart.entries.toList()) { entry ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(entry.key.name, fontWeight = FontWeight.Bold)
+                                Text("${entry.key.price} руб. x ${entry.value} шт.", color = Color.Gray, fontSize = 14.sp)
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { viewModel.removeFromCart(entry.key) }) {
+                                    Text("-", fontSize = 20.sp, fontWeight = FontWeight.Bold)
                                 }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = { viewModel.removeFromCart(entry.key) }) {
-                                        Text("-", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                    Text("${entry.value}", fontSize = 16.sp)
-                                    IconButton(onClick = { viewModel.addToCart(entry.key) }) {
-                                        Icon(Icons.Default.Add, contentDescription = null)
-                                    }
+                                Text("${entry.value}", fontSize = 16.sp)
+                                IconButton(onClick = { viewModel.addToCart(entry.key) }) {
+                                    Icon(Icons.Default.Add, contentDescription = null)
                                 }
                             }
                         }
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Итого: ${viewModel.getCartTotal()} руб.", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Итого: ${viewModel.getCartTotal()} руб.", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = VetGreen.copy(alpha = 0.1f))
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Способ получения: Самовывоз", fontWeight = FontWeight.Bold)
-                        Text("Адрес: г. Москва, ул. Ленина, д. 10 (ВетКлиника)", fontSize = 14.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Оплата при получении. Пожалуйста, не забудьте забрать заказ в течение 3 дней.", fontSize = 12.sp, color = Color.Gray)
-                    }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = VetGreen.copy(alpha = 0.1f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Способ получения: Самовывоз", fontWeight = FontWeight.Bold)
+                    Text("Адрес: г. Москва, ул. Ленина, д. 10 (ВетКлиника)", fontSize = 14.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Оплата при получении. Пожалуйста, не забудьте забрать заказ в течение 3 дней.", fontSize = 12.sp, color = Color.Gray)
                 }
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
-                    onClick = {
-                        viewModel.checkout(userId)
-                        onOrderSuccess()
-                    },
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
-                ) {
-                    Text("Оформить заказ")
-                }
+            Button(
+                onClick = {
+                    viewModel.checkout(userId)
+                    onOrderSuccess()
+                },
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
+            ) {
+                Text("Оформить заказ")
+            }
 
-                if (viewModel.orderMessage.isNotEmpty() && !viewModel.isOrderSuccess) {
-                    Text(viewModel.orderMessage, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
-                }
+            if (viewModel.orderMessage.isNotEmpty() && !viewModel.isOrderSuccess) {
+                Text(viewModel.orderMessage, color = Color.Red, modifier = Modifier.padding(top = 8.dp))
             }
         }
     }

@@ -104,7 +104,12 @@ data class Service(
     val price: String,
     val employee_id: Int?
 )
-data class Doctor(val id: Int, val full_name: String)
+
+data class Doctor(
+    val id: Int,
+    val full_name: String,
+    val image_url: String?
+)
 
 data class Slot(
     val id: Int,

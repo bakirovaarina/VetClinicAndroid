@@ -1,5 +1,6 @@
 package com.example.vetclient.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -85,116 +86,121 @@ class OrdersViewModel : ViewModel() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrdersScreen(userId: Int, onNavigateBack: () -> Unit, viewModel: OrdersViewModel = viewModel()) {
     LaunchedEffect(userId) {
         viewModel.loadOrders(userId)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Мои заказы") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = VetGreen, titleContentColor = Color.White)
-            )
-        },
-        containerColor = Color(0xFFF5F9F9)
-    ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues).padding(16.dp)) {
-            if (viewModel.message.isNotEmpty()) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                ) {
-                    Text(
-                        text = viewModel.message,
-                        color = Color(0xFF2E7D32),
-                        modifier = Modifier.padding(12.dp),
-                        fontSize = 14.sp
-                    )
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F9F9))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Назад",
+                    tint = VetGreen
+                )
             }
+            Text("Мои заказы", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        }
 
-            if (viewModel.isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = VetGreen)
-                }
-            } else if (viewModel.orders.isEmpty()) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("У вас нет заказов", color = Color.Gray)
-                }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(viewModel.orders) { order ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (viewModel.message.isNotEmpty()) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(bottom = 8.dp)
+            ) {
+                Text(
+                    text = viewModel.message,
+                    color = Color(0xFF2E7D32),
+                    modifier = Modifier.padding(12.dp),
+                    fontSize = 14.sp
+                )
+            }
+        }
+
+        if (viewModel.isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = VetGreen)
+            }
+        } else if (viewModel.orders.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("У вас нет заказов", color = Color.Gray)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(viewModel.orders) { order ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Заказ #${order.id}", fontWeight = FontWeight.Bold)
+
+                                val statusName = order.status_name ?: "Новый"
+                                val statusColor = when (statusName) {
+                                    "Новый" -> Color(0xFFE3F2FD)
+                                    "В обработке" -> Color(0xFFFFF3E0)
+                                    "Готов к получению" -> Color(0xFFE8F5E9)
+                                    "Получен" -> Color(0xFFF5F5F5)
+                                    "Отменен" -> Color(0xFFFFEBEE)
+                                    else -> Color(0xFFF5F5F5)
+                                }
+                                val statusTextColor = when (statusName) {
+                                    "Новый" -> Color(0xFF1565C0)
+                                    "В обработке" -> Color(0xFFE65100)
+                                    "Готов к получению" -> Color(0xFF2E7D32)
+                                    "Получен" -> Color(0xFF616161)
+                                    "Отменен" -> Color(0xFFC62828)
+                                    else -> Color(0xFF616161)
+                                }
+                                Surface(
+                                    color = statusColor,
+                                    shape = RoundedCornerShape(8.dp)
                                 ) {
-                                    Text("Заказ #${order.id}", fontWeight = FontWeight.Bold)
-
-                                    val statusName = order.status_name ?: "Новый"
-                                    val statusColor = when (statusName) {
-                                        "Новый" -> Color(0xFFE3F2FD)
-                                        "В обработке" -> Color(0xFFFFF3E0)
-                                        "Готов к получению" -> Color(0xFFE8F5E9)
-                                        "Получен" -> Color(0xFFF5F5F5)
-                                        "Отменен" -> Color(0xFFFFEBEE)
-                                        else -> Color(0xFFF5F5F5)
-                                    }
-                                    val statusTextColor = when (statusName) {
-                                        "Новый" -> Color(0xFF1565C0)
-                                        "В обработке" -> Color(0xFFE65100)
-                                        "Готов к получению" -> Color(0xFF2E7D32)
-                                        "Получен" -> Color(0xFF616161)
-                                        "Отменен" -> Color(0xFFC62828)
-                                        else -> Color(0xFF616161)
-                                    }
-                                    Surface(
-                                        color = statusColor,
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text(
-                                            text = statusName,
-                                            color = statusTextColor,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 12.sp,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                        )
-                                    }
+                                    Text(
+                                        text = statusName,
+                                        color = statusTextColor,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
                                 }
-                                Text("Сумма: ${order.total_amount} руб.", fontSize = 14.sp)
-                                Text("Забрать ${viewModel.getPickupDeadline(order.created_at)}", fontSize = 14.sp, color = VetGreen)
-                                Text("Самовывоз: г. Москва, ул. Ленина, д. 10", fontSize = 12.sp, color = Color.Gray)
+                            }
+                            Text("Сумма: ${order.total_amount} руб.", fontSize = 14.sp)
+                            Text("Забрать ${viewModel.getPickupDeadline(order.created_at)}", fontSize = 14.sp, color = VetGreen)
+                            Text("Самовывоз: г. Москва, ул. Ленина, д. 10", fontSize = 12.sp, color = Color.Gray)
 
-                                if (viewModel.canCancel(order)) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Button(
-                                        onClick = { viewModel.cancelOrder(order.id, userId) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFFFFEBEE),
-                                            contentColor = Color(0xFFC62828)
-                                        ),
-                                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("Отменить заказ")
-                                    }
-                                } else if (order.status_id == 1) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Отмена недоступна (прошло более 24 часов)", fontSize = 12.sp, color = Color.Gray)
+                            if (viewModel.canCancel(order)) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = { viewModel.cancelOrder(order.id, userId) },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFFFEBEE),
+                                        contentColor = Color(0xFFC62828)
+                                    ),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Отменить заказ")
                                 }
+                            } else if (order.status_id == 1) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Отмена недоступна (прошло более 24 часов)", fontSize = 12.sp, color = Color.Gray)
                             }
                         }
                     }

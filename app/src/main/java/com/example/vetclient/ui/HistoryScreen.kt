@@ -22,6 +22,7 @@ import com.example.vetclient.network.HistoryItem
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.foundation.background
 
 class HistoryViewModel : ViewModel() {
     var history by mutableStateOf<List<HistoryItem>>(emptyList())
@@ -147,28 +148,39 @@ fun HistoryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("История лечения") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
-                            tint = Color.White
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = VetGreen,
-                    titleContentColor = Color.White
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(VetGreen)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Назад",
+                        tint = Color.White
+                    )
+                }
+                Text(
+                    text = "История лечения",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
                 )
-            )
+            }
         },
         containerColor = Color(0xFFF5F9F9)
     ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .padding(paddingValues)
+                .fillMaxSize()
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf("Все", "Приёмы", "Груминг", "Выгул").forEach { filter ->
@@ -181,7 +193,7 @@ fun HistoryScreen(
             }
 
             var expanded by remember { mutableStateOf(false) }
-            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)) {
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
@@ -216,7 +228,7 @@ fun HistoryScreen(
                 Text(
                     viewModel.message,
                     color = if (viewModel.message.contains("успешно")) Color.Green else Color.Red,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
 
@@ -235,10 +247,15 @@ fun HistoryScreen(
                     Text("Записей не найдено", color = Color.Gray)
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     items(filteredHistory) { item ->
                         Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = Color.White)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
