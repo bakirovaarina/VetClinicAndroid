@@ -76,7 +76,6 @@ class AddPetViewModel : ViewModel() {
                         message = if (petId == null) "Питомец добавлен!" else "Данные обновлены!"
                         isError = false
                         isSuccess = true
-
                         val returnedId = body.pet_id ?: petId ?: 0
                         onSuccess(returnedId)
                     } else {
@@ -162,8 +161,8 @@ fun AddPetScreen(
     }
 
     LaunchedEffect(viewModel.isSuccess) {
-        if (viewModel.isSuccess && viewModel.message == "Фото загружено!") {
-            kotlinx.coroutines.delay(1000)
+        if (viewModel.isSuccess && !viewModel.isLoading) {
+            kotlinx.coroutines.delay(1500)
             onNavigateBack()
         }
     }
@@ -252,10 +251,7 @@ fun AddPetScreen(
 
         OutlinedTextField(
             value = name,
-            onValueChange = {
-                name = it
-                nameError = null
-            },
+            onValueChange = { name = it; nameError = null },
             label = { Text("Кличка") },
             isError = nameError != null,
             supportingText = { nameError?.let { Text(it) } },
@@ -266,11 +262,8 @@ fun AddPetScreen(
 
         OutlinedTextField(
             value = species,
-            onValueChange = {
-                species = it
-                speciesError = null
-            },
-            label = { Text("Вид животного (например, Собака)") },
+            onValueChange = { species = it; speciesError = null },
+            label = { Text("Вид животного") },
             isError = speciesError != null,
             supportingText = { speciesError?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth(),
@@ -289,12 +282,7 @@ fun AddPetScreen(
 
         OutlinedTextField(
             value = weight,
-            onValueChange = {
-                if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) {
-                    weight = it
-                    weightError = null
-                }
-            },
+            onValueChange = { if (it.isEmpty() || it.matches(Regex("^\\d*\\.?\\d*$"))) { weight = it; weightError = null } },
             label = { Text("Вес (кг, необязательно)") },
             isError = weightError != null,
             supportingText = { weightError?.let { Text(it) } },
@@ -306,12 +294,7 @@ fun AddPetScreen(
 
         OutlinedTextField(
             value = age,
-            onValueChange = {
-                if (it.isEmpty() || it.matches(Regex("^\\d*$"))) {
-                    age = it
-                    ageError = null
-                }
-            },
+            onValueChange = { if (it.isEmpty() || it.matches(Regex("^\\d*$"))) { age = it; ageError = null } },
             label = { Text("Возраст (лет, необязательно)") },
             isError = ageError != null,
             supportingText = { ageError?.let { Text(it) } },
@@ -337,19 +320,12 @@ fun AddPetScreen(
                             petId = petToEdit?.id,
                             onSuccess = { id ->
                                 savedPetId = id
-                                android.util.Log.d("PHOTO_DEBUG", "onSuccess id=$id, uri=$selectedImageUri")
                                 if (selectedImageUri != null) {
                                     val file = uriToFile(context, selectedImageUri!!)
-                                    android.util.Log.d("PHOTO_DEBUG", "file=$file")
                                     if (file != null) {
                                         viewModel.uploadPhoto(id, file)
                                     } else {
-                                        android.util.Log.e("PHOTO_DEBUG", "file is null, не могу загрузить")
-                                        onNavigateBack()
                                     }
-                                } else {
-                                    android.util.Log.d("PHOTO_DEBUG", "uri is null, закрываем")
-                                    onNavigateBack()
                                 }
                             }
                         )

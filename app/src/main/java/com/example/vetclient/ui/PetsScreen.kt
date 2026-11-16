@@ -1,24 +1,31 @@
 package com.example.vetclient.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.vetclient.network.ApiClient
 import com.example.vetclient.network.DeletePetRequest
 import com.example.vetclient.network.Pet
@@ -112,36 +119,59 @@ fun PetsScreen(
                 )
             }
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(viewModel.pets) { pet ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .background(VetGreen.copy(alpha = 0.1f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (pet.image_url != null) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(pet.image_url),
+                                        contentDescription = "Фото питомца",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(Icons.Default.Pets, contentDescription = null, tint = VetGreen, modifier = Modifier.size(32.dp))
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(pet.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = VetGreen)
-                                Text("${pet.species} • ${pet.breed ?: "Порода не указана"}", fontSize = 14.sp, color = Color.Gray)
+                                Text("${pet.species} • ${pet.breed ?: "Порода не указана"}", fontSize = 13.sp, color = Color.Gray)
                                 if (pet.age != null) {
-                                    Text("Возраст: ${pet.age} лет", fontSize = 14.sp, color = Color.Gray)
+                                    Text("Возраст: ${pet.age} лет", fontSize = 13.sp, color = Color.Gray)
                                 }
                                 if (pet.weight_kg != null) {
-                                    Text("Вес: ${pet.weight_kg} кг", fontSize = 14.sp, color = Color.Gray)
+                                    Text("Вес: ${pet.weight_kg} кг", fontSize = 13.sp, color = Color.Gray)
                                 }
                             }
-                            IconButton(onClick = { onNavigateToHistory(pet) }) {
-                                Icon(Icons.Default.List, contentDescription = "История лечения", tint = Color.Blue)
-                            }
-                            IconButton(onClick = { onNavigateToEdit(pet) }) {
-                                Icon(Icons.Default.Edit, contentDescription = "Редактировать", tint = VetGreen)
-                            }
-                            IconButton(onClick = { viewModel.deletePet(pet.id, userId) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = Color.Red)
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(onClick = { onNavigateToHistory(pet) }) {
+                                    Icon(Icons.Default.List, contentDescription = "История лечения", tint = Color.Blue)
+                                }
+                                IconButton(onClick = { onNavigateToEdit(pet) }) {
+                                    Icon(Icons.Default.Edit, contentDescription = "Редактировать", tint = VetGreen)
+                                }
+                                IconButton(onClick = { viewModel.deletePet(pet.id, userId) }) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Удалить", tint = Color.Red)
+                                }
                             }
                         }
                     }
