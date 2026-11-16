@@ -12,6 +12,7 @@ import com.example.vetclient.ui.ForgotPasswordScreen
 import com.example.vetclient.ui.LoginScreen
 import com.example.vetclient.ui.MainScreen
 import com.example.vetclient.ui.RegisterScreen
+import com.example.vetclient.ui.WelcomeScreen
 import com.example.vetclient.ui.theme.VetClientTheme
 
 class MainActivity : ComponentActivity() {
@@ -23,14 +24,20 @@ class MainActivity : ComponentActivity() {
                 MaterialTheme {
                     val navController = rememberNavController()
 
-                    NavHost(navController = navController, startDestination = "login") {
+                    NavHost(navController = navController, startDestination = "welcome") {
 
-                        // Экран Входа
+                        composable("welcome") {
+                            WelcomeScreen(
+                                onNavigateToRegister = { navController.navigate("register") },
+                                onNavigateToLogin = { navController.navigate("login") }
+                            )
+                        }
+
                         composable("login") {
                             LoginScreen(
                                 onLoginSuccess = { name, id ->
                                     navController.navigate("main/$name/$id") {
-                                        popUpTo("login") { inclusive = true }
+                                        popUpTo("welcome") { inclusive = true }
                                     }
                                 },
                                 onNavigateToRegister = { navController.navigate("register") },
@@ -38,21 +45,18 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // Экран Восстановления пароля
                         composable("forgot_password") {
                             ForgotPasswordScreen(
                                 onNavigateBack = { navController.popBackStack() }
                             )
                         }
 
-                        // Экран Регистрации
                         composable("register") {
                             RegisterScreen(
                                 onNavigateToLogin = { navController.navigate("login") }
                             )
                         }
 
-                        // Главный экран
                         composable("main/{userName}/{userId}") { backStackEntry ->
                             val userName = backStackEntry.arguments?.getString("userName") ?: "Гость"
                             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull() ?: 1
@@ -60,7 +64,7 @@ class MainActivity : ComponentActivity() {
                                 userName = userName,
                                 userId = userId,
                                 onLogout = {
-                                    navController.navigate("login") {
+                                    navController.navigate("welcome") {
                                         popUpTo("main/{userName}/{userId}") { inclusive = true }
                                     }
                                 }
@@ -72,4 +76,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
