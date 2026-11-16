@@ -5,6 +5,29 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.GET
 import retrofit2.http.Query
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import retrofit2.http.Multipart
+import retrofit2.http.Part
+
+// Модели для главного экрана
+data class HomeData(
+    val next_appointment: NextAppointment?,
+    val promo: Promo?
+)
+
+data class NextAppointment(
+    val id: Int,
+    val start_at: String,
+    val service_name: String,
+    val doctor_name: String
+)
+
+data class Promo(
+    val title: String,
+    val subtitle: String,
+    val image: String?
+)
 
 // Модели для регистрации
 data class RegisterRequest(
@@ -16,7 +39,8 @@ data class RegisterRequest(
 
 data class AuthResponse(
     val status: String,
-    val message: String
+    val message: String,
+    val pet_id: Int? = null
 )
 
 // Модели для входа
@@ -50,7 +74,8 @@ data class Pet(
     val birth_date: String?,
     val weight_kg: String?,
     val species: String,
-    val age: Int?
+    val age: Int?,
+    val image_url: String?
 )
 
 data class AddPetRequest(
@@ -250,4 +275,14 @@ interface ApiService {
 
     @POST("cancel_order.php")
     suspend fun cancelOrder(@Body request: CancelOrderRequest): Response<AuthResponse>
+
+    @GET("get_home_data.php")
+    suspend fun getHomeData(@Query("user_id") userId: Int): Response<HomeData>
+
+    @Multipart
+    @POST("upload_photo.php")
+    suspend fun uploadPhoto(
+        @Part("pet_id") petId: RequestBody,
+        @Part photo: MultipartBody.Part
+    ): Response<AuthResponse>
 }

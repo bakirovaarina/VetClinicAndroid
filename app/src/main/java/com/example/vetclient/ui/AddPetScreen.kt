@@ -1,20 +1,38 @@
 package com.example.vetclient.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.vetclient.network.AddPetRequest
 import com.example.vetclient.network.ApiClient
 import com.example.vetclient.network.Pet
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
+import java.io.FileOutputStream
 
 class AddPetViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
@@ -22,7 +40,16 @@ class AddPetViewModel : ViewModel() {
     var isError by mutableStateOf(false)
     var isSuccess by mutableStateOf(false)
 
-    fun savePet(userId: Int, name: String, species: String, breed: String, weight: String, age: String, petId: Int? = null) {
+    fun savePet(
+        userId: Int,
+        name: String,
+        species: String,
+        breed: String,
+        weight: String,
+        age: String,
+        petId: Int? = null,
+        onSuccess: (Int) -> Unit
+    ) {
         isLoading = true
         message = ""
         viewModelScope.launch {
@@ -49,6 +76,9 @@ class AddPetViewModel : ViewModel() {
                         message = if (petId == null) "Питомец добавлен!" else "Данные обновлены!"
                         isError = false
                         isSuccess = true
+
+                        val returnedId = body.pet_id ?: petId ?: 0
+                        onSuccess(returnedId)
                     } else {
                         message = body?.message ?: "Ошибка"
                         isError = true
@@ -59,6 +89,39 @@ class AddPetViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 message = "Нет связи с сервером. Проверьте Laragon."
+                isError = true
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun uploadPhoto(petId: Int, file: File) {
+        isLoading = true
+        message = ""
+        viewModelScope.launch {
+            try {
+                val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val photoPart = MultipartBody.Part.createFormData("photo", file.name, requestBody)
+                val petIdPart = petId.toString().toRequestBody("text/plain".toMediaTypeOrNull())
+
+                val response = ApiClient.apiService.uploadPhoto(petIdPart, photoPart)
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body?.status == "success") {
+                        message = "Фото загружено!"
+                        isError = false
+                        isSuccess = true
+                    } else {
+                        message = body?.message ?: "Ошибка загрузки"
+                        isError = true
+                    }
+                } else {
+                    message = "Ошибка сервера"
+                    isError = true
+                }
+            } catch (e: Exception) {
+                message = "Нет связи с сервером"
                 isError = true
             } finally {
                 isLoading = false
@@ -80,15 +143,37 @@ fun AddPetScreen(
     var species by remember { mutableStateOf(petToEdit?.species ?: "") }
     var age by remember { mutableStateOf("") }
 
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var savedPetId by remember { mutableStateOf<Int?>(petToEdit?.id) }
+
     var nameError by remember { mutableStateOf<String?>(null) }
     var speciesError by remember { mutableStateOf<String?>(null) }
     var weightError by remember { mutableStateOf<String?>(null) }
     var ageError by remember { mutableStateOf<String?>(null) }
 
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri = uri
+        }
+    }
+
     LaunchedEffect(viewModel.isSuccess) {
         if (viewModel.isSuccess) {
-            kotlinx.coroutines.delay(1500)
-            onNavigateBack()
+            if (selectedImageUri != null && savedPetId != null && savedPetId != 0) {
+                val file = uriToFile(context, selectedImageUri!!)
+                if (file != null) {
+                    viewModel.uploadPhoto(savedPetId!!, file)
+                } else {
+                    onNavigateBack()
+                }
+            } else {
+                kotlinx.coroutines.delay(1000)
+                onNavigateBack()
+            }
         }
     }
 
@@ -144,6 +229,34 @@ fun AddPetScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(if (petToEdit == null) "Добавить питомца" else "Редактировать питомца", fontSize = 24.sp)
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .background(Color.LightGray.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                .clickable { launcher.launch("image/*") },
+            contentAlignment = Alignment.Center
+        ) {
+            if (selectedImageUri != null) {
+                Image(
+                    painter = rememberAsyncImagePainter(selectedImageUri),
+                    contentDescription = "Фото питомца",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else if (petToEdit?.image_url != null) {
+                Image(
+                    painter = rememberAsyncImagePainter(petToEdit.image_url),
+                    contentDescription = "Фото питомца",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(Icons.Default.PhotoCamera, contentDescription = "Добавить фото", tint = Color.Gray, modifier = Modifier.size(40.dp))
+            }
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
@@ -223,7 +336,18 @@ fun AddPetScreen(
             Button(
                 onClick = {
                     if (validate()) {
-                        viewModel.savePet(userId, name, species, breed, weight, age, petToEdit?.id)
+                        viewModel.savePet(
+                            userId = userId,
+                            name = name,
+                            species = species,
+                            breed = breed,
+                            weight = weight,
+                            age = age,
+                            petId = petToEdit?.id,
+                            onSuccess = { id ->
+                                savedPetId = id
+                            }
+                        )
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -237,7 +361,7 @@ fun AddPetScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text(
                 text = viewModel.message,
-                color = if (viewModel.isError) androidx.compose.ui.graphics.Color.Red else androidx.compose.ui.graphics.Color.Green
+                color = if (viewModel.isError) Color.Red else Color.Green
             )
         }
 
@@ -246,5 +370,19 @@ fun AddPetScreen(
         TextButton(onClick = onNavigateBack) {
             Text("Назад", color = VetGreen)
         }
+    }
+}
+
+fun uriToFile(context: android.content.Context, uri: Uri): File? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val file = File(context.cacheDir, "upload_${System.currentTimeMillis()}.jpg")
+        val outputStream = FileOutputStream(file)
+        inputStream.copyTo(outputStream)
+        inputStream.close()
+        outputStream.close()
+        file
+    } catch (e: Exception) {
+        null
     }
 }

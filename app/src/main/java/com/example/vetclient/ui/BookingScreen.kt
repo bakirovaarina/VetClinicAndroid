@@ -38,6 +38,9 @@ class BookingViewModel : ViewModel() {
     var selectedDate by mutableStateOf<String?>(null)
     var selectedTime by mutableStateOf<String?>(null)
 
+    var isCategoryPreselected by mutableStateOf(false)
+    var cameFromHome by mutableStateOf(false)
+
     fun loadData(date: String? = null, category: String? = null) {
         isLoading = true
         message = ""
@@ -101,9 +104,20 @@ class BookingViewModel : ViewModel() {
 fun BookingScreen(
     userId: Int,
     pets: List<Pet>,
+    initialCategory: String? = null,
     onBookingSuccess: () -> Unit,
+    onNavigateBack: () -> Unit = {},
+    onNavigateToMain: () -> Unit = {},
     viewModel: BookingViewModel = viewModel()
 ) {
+    LaunchedEffect(initialCategory) {
+        if (initialCategory != null && !viewModel.isCategoryPreselected) {
+            viewModel.selectedCategory = initialCategory
+            viewModel.isCategoryPreselected = true
+            viewModel.loadData(category = initialCategory)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -111,9 +125,17 @@ fun BookingScreen(
                 navigationIcon = {
                     if (viewModel.currentStep > 1 && viewModel.currentStep < 7) {
                         IconButton(onClick = {
-                            viewModel.currentStep--
+                            if (viewModel.currentStep == 3 && viewModel.cameFromHome) {
+                                viewModel.currentStep = 1
+                            } else {
+                                viewModel.currentStep--
+                            }
                             viewModel.message = ""
                         }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = Color.White)
+                        }
+                    } else if (viewModel.currentStep == 1) {
+                        IconButton(onClick = onNavigateBack) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = Color.White)
                         }
                     }
@@ -139,8 +161,12 @@ fun BookingScreen(
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp).clickable {
                                     viewModel.selectedPetId = pet.id
-                                    viewModel.currentStep = 2
                                     viewModel.message = ""
+                                    if (viewModel.selectedCategory != null) {
+                                        viewModel.currentStep = 3
+                                    } else {
+                                        viewModel.currentStep = 2
+                                    }
                                 },
                                 colors = CardDefaults.cardColors(
                                     containerColor = if (viewModel.selectedPetId == pet.id) VetGreen.copy(alpha = 0.2f) else Color.White
