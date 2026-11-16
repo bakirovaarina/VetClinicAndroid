@@ -358,10 +358,19 @@ fun RegisterScreen(
 
             if (viewModel.message.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = viewModel.message,
-                    color = if (viewModel.isError) Color.Red else Color.Green
-                )
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (viewModel.isError) Color(0xFFFFEBEE) else Color(0xFFE8F5E9)
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = viewModel.message,
+                        color = if (viewModel.isError) Color(0xFFC62828) else Color(0xFF2E7D32),
+                        modifier = Modifier.padding(12.dp),
+                        fontSize = 14.sp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

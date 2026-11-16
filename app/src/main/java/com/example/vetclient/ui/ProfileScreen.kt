@@ -458,11 +458,21 @@ fun ChangePasswordScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         if (viewModel.message.isNotEmpty()) {
-            Text(
-                viewModel.message,
-                color = if (viewModel.isError) Color.Red else Color.Green,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = if (viewModel.isError) Color(0xFFFFEBEE) else Color(0xFFE8F5E9)
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = viewModel.message,
+                    color = if (viewModel.isError) Color(0xFFC62828) else Color(0xFF2E7D32),
+                    modifier = Modifier.padding(12.dp),
+                    fontSize = 14.sp
+                )
+            }
         }
 
         Button(

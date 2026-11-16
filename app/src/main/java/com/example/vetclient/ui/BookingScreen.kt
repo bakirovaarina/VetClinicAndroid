@@ -21,6 +21,7 @@ import com.example.vetclient.network.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 class BookingViewModel : ViewModel() {
     var bookingData by mutableStateOf<BookingData?>(null)
@@ -308,10 +309,17 @@ fun BookingScreen(
 
                         if (viewModel.message.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = viewModel.message,
-                                color = Color.Red
-                            )
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = viewModel.message,
+                                    color = Color(0xFFC62828),
+                                    modifier = Modifier.padding(12.dp),
+                                    fontSize = 14.sp
+                                )
+                            }
                         }
                     }
                     6 -> item {
@@ -370,7 +378,17 @@ fun BookingScreen(
 
                             if (viewModel.message.isNotEmpty() && !viewModel.isSuccess) {
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(viewModel.message, color = Color.Red)
+                                Card(
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        text = viewModel.message,
+                                        color = Color(0xFFC62828),
+                                        modifier = Modifier.padding(12.dp),
+                                        fontSize = 14.sp
+                                    )
+                                }
                             }
                         }
                     }
