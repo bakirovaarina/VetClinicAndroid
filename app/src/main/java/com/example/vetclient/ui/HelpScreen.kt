@@ -1,10 +1,13 @@
 package com.example.vetclient.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -47,6 +50,7 @@ class HelpViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     val body = response.body()
                     message = body?.message ?: "Успешно"
+                    loadDonations()
                 } else {
                     message = "Ошибка"
                 }
@@ -64,44 +68,120 @@ fun HelpScreen(userId: Int, onNavigateBack: () -> Unit, viewModel: HelpViewModel
         viewModel.loadDonations()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Помощь животным") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Назад", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = VetGreen, titleContentColor = Color.White)
-            )
-        },
-        containerColor = Color(0xFFF5F9F9)
-    ) { paddingValues ->
-        Column(modifier = Modifier.padding(paddingValues).padding(16.dp)) {
-            if (viewModel.isLoading) {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-            } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(viewModel.fundraisings) { fund ->
-                        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color.White)) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(fund.title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text("Цель: ${fund.goal_amount} руб.", color = Color.Gray, fontSize = 14.sp)
-                                Spacer(modifier = Modifier.height(8.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F9F9))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onNavigateBack) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Назад",
+                    tint = VetGreen
+                )
+            }
+            Text("Помощь животным", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (viewModel.isLoading) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = VetGreen)
+            }
+        } else {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(viewModel.fundraisings) { fund ->
+                    val goal = fund.goal_amount.toDoubleOrNull() ?: 0.0
+                    val collected = fund.collected_amount.toDoubleOrNull() ?: 0.0
+                    val progress = if (goal > 0) (collected / goal).toFloat().coerceIn(0f, 1f) else 0f
+                    val isCompleted = progress >= 1f
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(fund.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, modifier = Modifier.weight(1f))
+                                if (isCompleted) {
+                                    Surface(
+                                        color = Color(0xFFE8F5E9),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("Завершен", color = Color(0xFF2E7D32), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                    }
+                                } else {
+                                    Surface(
+                                        color = Color(0xFFFFF3E0),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("Активен", color = Color(0xFFE65100), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            LinearProgressIndicator(
+                                progress = progress,
+                                modifier = Modifier.fillMaxWidth().height(8.dp),
+                                color = if (isCompleted) Color(0xFF2E7D32) else VetGreen,
+                                trackColor = VetGreen.copy(alpha = 0.2f)
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Суммы
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Собрано: ${fund.collected_amount} руб.", fontSize = 14.sp, color = Color.DarkGray)
+                                Text("Цель: ${fund.goal_amount} руб.", fontSize = 14.sp, color = Color.Gray)
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            if (!isCompleted) {
                                 Button(
                                     onClick = { viewModel.donate(userId, fund.id, 500.0) },
+                                    modifier = Modifier.fillMaxWidth().height(40.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
                                 ) {
+                                    Icon(Icons.Default.Favorite, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text("Пожертвовать 500 ₽")
                                 }
                             }
                         }
                     }
                 }
+            }
 
-                if (viewModel.message.isNotEmpty()) {
-                    Text(viewModel.message, color = VetGreen, modifier = Modifier.padding(top = 16.dp))
+            if (viewModel.message.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = viewModel.message,
+                        color = Color(0xFF2E7D32),
+                        modifier = Modifier.padding(12.dp),
+                        fontSize = 14.sp
+                    )
                 }
             }
         }

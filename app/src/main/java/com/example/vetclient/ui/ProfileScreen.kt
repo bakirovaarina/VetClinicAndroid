@@ -1,21 +1,20 @@
 package com.example.vetclient.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -136,82 +135,131 @@ fun ProfileScreen(
     NavHost(navController = profileNavController, startDestination = "profile_main") {
         composable("profile_main") {
             Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF5F9F9))
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
             ) {
                 Text("Профиль", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 if (viewModel.isLoading) {
-                    CircularProgressIndicator(color = VetGreen)
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = VetGreen)
+                    }
                 } else {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = VetGreen, modifier = Modifier.size(40.dp))
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
-                                    Text(viewModel.profile?.full_name ?: "Загрузка...", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                                    Text(viewModel.profile?.email ?: "", fontSize = 14.sp, color = Color.Gray)
-                                    Text(viewModel.profile?.phone ?: "", fontSize = 14.sp, color = Color.Gray)
-                                }
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                                    .background(VetGreen.copy(alpha = 0.1f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = viewModel.profile?.full_name?.firstOrNull()?.toString() ?: "?",
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = VetGreen
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    viewModel.profile?.full_name ?: "Загрузка...",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.DarkGray
+                                )
+                                Text(
+                                    viewModel.profile?.email ?: "",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    viewModel.profile?.phone ?: "",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray
+                                )
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Button(
-                        onClick = { profileNavController.navigate("edit_profile") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
-                    ) {
-                        Icon(Icons.Default.Edit, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Редактировать профиль")
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Button(
-                        onClick = { profileNavController.navigate("change_password") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
-                    ) {
-                        Text("Сменить пароль")
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
                     Card(
-                        modifier = Modifier.fillMaxWidth().clickable { profileNavController.navigate("help") },
-                        colors = CardDefaults.cardColors(containerColor = VetGreen)
+                        modifier = Modifier.fillMaxWidth().clickable { profileNavController.navigate("edit_profile") },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White)
+                            Icon(Icons.Default.Edit, contentDescription = null, tint = VetGreen)
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text("Помощь бездомным животным", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("Редактировать профиль", fontSize = 16.sp, color = Color.DarkGray)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    Button(
-                        onClick = { profileNavController.navigate("orders") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = VetGreen)
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable { profileNavController.navigate("change_password") },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
-                        Text("Мои заказы")
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Lock, contentDescription = null, tint = VetGreen)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Сменить пароль", fontSize = 16.sp, color = Color.DarkGray)
+                        }
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable { profileNavController.navigate("orders") },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = VetGreen)
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Мои заказы", fontSize = 16.sp, color = Color.DarkGray)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth().clickable { profileNavController.navigate("help") },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F5))
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Favorite, contentDescription = null, tint = Color(0xFFE57373))
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Text("Помощь бездомным животным", fontSize = 16.sp, color = Color(0xFF5D4037))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Button(
                         onClick = onLogout,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFEBEE),
+                            contentColor = Color(0xFFC62828)
+                        )
                     ) {
                         Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -257,6 +305,7 @@ fun ProfileScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(
     userId: Int,

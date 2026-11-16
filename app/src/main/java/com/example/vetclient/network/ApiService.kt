@@ -217,7 +217,9 @@ data class ChangePasswordRequest(
 data class Fundraising(
     val id: Int,
     val title: String,
-    val goal_amount: String
+    val goal_amount: String,
+    val collected_amount: String,
+    val is_active: Int
 )
 
 data class DonationRequest(
