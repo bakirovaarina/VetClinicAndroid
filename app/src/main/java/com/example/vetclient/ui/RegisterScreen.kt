@@ -22,6 +22,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.vetclient.network.ApiClient
 import com.example.vetclient.network.RegisterRequest
 import kotlinx.coroutines.launch
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
 
 class RegisterViewModel : ViewModel() {
     var isLoading by mutableStateOf(false)
@@ -72,7 +74,7 @@ fun RegisterScreen(
     var middleName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
+    var phoneValue by remember { mutableStateOf(TextFieldValue("")) }
     var passwordVisible by remember { mutableStateOf(false) }
 
     var lastNameError by remember { mutableStateOf<String?>(null) }
@@ -81,6 +83,9 @@ fun RegisterScreen(
     var emailError by remember { mutableStateOf<String?>(null) }
     var phoneError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+
+    var isAgreed by remember { mutableStateOf(false) }
+    var agreementError by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel.registrationSuccess) {
         if (viewModel.registrationSuccess) {
@@ -119,6 +124,7 @@ fun RegisterScreen(
         emailError = null
         phoneError = null
         passwordError = null
+        agreementError = false
         var isValid = true
 
         if (lastName.isBlank()) {
@@ -151,8 +157,8 @@ fun RegisterScreen(
             }
         }
 
-        val digits = phone.filter { it.isDigit() }
-        if (phone.isBlank()) {
+        val digits = phoneValue.text.filter { it.isDigit() }
+        if (phoneValue.text.isBlank()) {
             phoneError = "Поле не может быть пустым"
             isValid = false
         } else if (digits.length < 11) {
@@ -168,6 +174,11 @@ fun RegisterScreen(
             isValid = false
         } else if (password.contains(" ")) {
             passwordError = "Пароль не должен содержать пробелов"
+            isValid = false
+        }
+
+        if (!isAgreed) {
+            agreementError = true
             isValid = false
         }
 
@@ -251,9 +262,17 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
-                value = phone,
-                onValueChange = {
-                    phone = formatPhone(it)
+                value = phoneValue,
+                onValueChange = { newValue ->
+                    val formatted = formatPhone(newValue.text)
+                    if (formatted != newValue.text) {
+                        phoneValue = TextFieldValue(
+                            text = formatted,
+                            selection = TextRange(formatted.length)
+                        )
+                    } else {
+                        phoneValue = newValue
+                    }
                     phoneError = null
                 },
                 label = { Text("Телефон") },
@@ -287,6 +306,35 @@ fun RegisterScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = isAgreed,
+                    onCheckedChange = {
+                        isAgreed = it
+                        agreementError = false
+                    }
+                )
+                Text(
+                    text = "Я согласен(а) с условиями пользования",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
+            }
+
+            if (agreementError) {
+                Text(
+                    text = "Примите соглашение",
+                    color = Color.Red,
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             if (viewModel.isLoading) {
@@ -295,7 +343,7 @@ fun RegisterScreen(
                 Button(
                     onClick = {
                         if (validate()) {
-                            viewModel.register(lastName, firstName, middleName, email, password, phone)
+                            viewModel.register(lastName, firstName, middleName, email, password, phoneValue.text)
                         }
                     },
                     modifier = Modifier
