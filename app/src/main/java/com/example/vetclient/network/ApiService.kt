@@ -219,7 +219,9 @@ data class Fundraising(
     val title: String,
     val goal_amount: String,
     val collected_amount: String,
-    val is_active: Int
+    val is_active: Int,
+    val image_url: String?,
+    val report_text: String?
 )
 
 data class DonationRequest(
