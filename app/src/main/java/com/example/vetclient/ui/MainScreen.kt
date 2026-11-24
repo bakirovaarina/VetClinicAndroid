@@ -84,28 +84,19 @@ fun MainScreen(userName: String, userId: Int, onLogout: () -> Unit) {
                     userName = userName,
                     userId = userId,
                     onNavigateToBooking = { category ->
-                        navController.navigate("appointments_with_category/${category ?: ""}") {
-                            popUpTo(BottomNavItem.Home.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
+                        navController.navigate("appointments_with_category/${category ?: ""}")
                     },
                     onNavigateToPets = {
-                        navController.navigate(BottomNavItem.Pets.route) {
-                            popUpTo(BottomNavItem.Home.route) { saveState = true }
-                            launchSingleTop = true
-                        }
+                        navController.navigate(BottomNavItem.Pets.route)
                     },
                     onNavigateToShop = {
-                        navController.navigate(BottomNavItem.Shop.route) {
-                            popUpTo(BottomNavItem.Home.route) { saveState = true }
-                            launchSingleTop = true
-                        }
+                        navController.navigate(BottomNavItem.Shop.route)
                     },
                     onNavigateToHelp = {
-                        navController.navigate("help_home") {
-                            popUpTo(BottomNavItem.Home.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
+                        navController.navigate("help_home")
+                    },
+                    onNavigateToNotifications = {
+                        navController.navigate("notifications")
                     }
                 )
             }
@@ -228,6 +219,13 @@ fun MainScreen(userName: String, userId: Int, onLogout: () -> Unit) {
 
             composable("help_home") {
                 HelpScreen(
+                    userId = userId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("notifications") {
+                NotificationsScreen(
                     userId = userId,
                     onNavigateBack = { navController.popBackStack() }
                 )

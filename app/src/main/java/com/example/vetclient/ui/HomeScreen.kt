@@ -69,7 +69,8 @@ fun HomeScreen(
     onNavigateToBooking: (String?) -> Unit,
     onNavigateToPets: () -> Unit,
     onNavigateToShop: () -> Unit,
-    onNavigateToHelp: () -> Unit
+    onNavigateToHelp: () -> Unit,
+    onNavigateToNotifications: () -> Unit
 ) {
     val viewModel: HomeViewModel = viewModel()
 
@@ -99,7 +100,9 @@ fun HomeScreen(
                         Text("Добрый день,", fontSize = 14.sp, color = Color.Gray)
                         Text(userName, fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                     }
-                    Icon(Icons.Default.Notifications, contentDescription = null, tint = VetGreen)
+                    IconButton(onClick = onNavigateToNotifications) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Уведомления", tint = VetGreen)
+                    }
                 }
             }
 

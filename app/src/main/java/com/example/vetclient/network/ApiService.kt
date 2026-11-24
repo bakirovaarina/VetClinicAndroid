@@ -228,6 +228,14 @@ data class DonationRequest(
     val amount: Double
 )
 
+data class UserNotification(
+    val id: Int,
+    val title: String,
+    val text: String,
+    val type: String,
+    val date: String
+)
+
 interface ApiService {
     @POST("register.php")
     suspend fun registerUser(@Body request: RegisterRequest): Response<AuthResponse>
@@ -307,4 +315,7 @@ interface ApiService {
 
     @POST("update_order_status.php")
     suspend fun updateOrderStatus(@Body request: UpdateOrderStatusRequest): Response<AuthResponse>
+
+    @GET("get_notifications.php")
+    suspend fun getNotifications(@Query("user_id") userId: Int): Response<List<UserNotification>>
 }
