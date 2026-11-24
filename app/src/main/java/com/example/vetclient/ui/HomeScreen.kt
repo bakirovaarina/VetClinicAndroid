@@ -154,25 +154,24 @@ fun HomeScreen(
                 }
             }
 
+            // Ближайшая запись (единственная)
             item {
                 Text("Предстоящие события", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
                 Spacer(modifier = Modifier.height(8.dp))
-                val appointments = viewModel.homeData?.next_appointments ?: emptyList()
-                if (appointments.isNotEmpty()) {
-                    appointments.forEach { next ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.DateRange, contentDescription = null, tint = VetGreen)
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(next.service_name, fontWeight = FontWeight.Bold)
-                                    Text("Питомец: ${next.pet_name}", fontSize = 12.sp, color = Color.DarkGray)
-                                    Text("${next.start_at} • ${next.doctor_name}", fontSize = 12.sp, color = Color.Gray)
-                                }
+                val next = viewModel.homeData?.next_appointment
+                if (next != null) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.DateRange, contentDescription = null, tint = VetGreen)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(next.service_name, fontWeight = FontWeight.Bold)
+                                Text("Питомец: ${next.pet_name}", fontSize = 12.sp, color = Color.DarkGray)
+                                Text("${next.start_at} • ${next.doctor_name}", fontSize = 12.sp, color = Color.Gray)
                             }
                         }
                     }
@@ -181,6 +180,32 @@ fun HomeScreen(
                 }
             }
 
+            // Напоминание о вакцинации
+            item {
+                val reminder = viewModel.homeData?.next_reminder
+                if (reminder != null) {
+                    Text("Напоминание", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                    ) {
+                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Notifications, contentDescription = null, tint = Color(0xFFE65100))
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Повторная вакцинация", fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
+                                Text("Питомец: ${reminder.pet_name}", fontSize = 12.sp, color = Color.DarkGray)
+                                Text("Вакцина: ${reminder.vaccine_name}", fontSize = 12.sp, color = Color.Gray)
+                                Text("Дата: ${reminder.date}", fontSize = 12.sp, color = Color.Gray)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Готовые заказы
             item {
                 val readyOrders = viewModel.homeData?.ready_orders
                 if (readyOrders != null && readyOrders.isNotEmpty()) {
@@ -206,6 +231,7 @@ fun HomeScreen(
                 }
             }
 
+            // Помощь животным
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth().clickable { onNavigateToHelp() },

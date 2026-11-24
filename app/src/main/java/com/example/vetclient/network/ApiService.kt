@@ -12,9 +12,16 @@ import retrofit2.http.Part
 
 // Модели для главного экрана
 data class HomeData(
-    val next_appointments: List<NextAppointment>,
+    val next_appointment: NextAppointment?,
+    val next_reminder: NextReminder?,
     val ready_orders: List<ReadyOrder>,
     val promo: Promo?
+)
+
+data class NextReminder(
+    val date: String,
+    val vaccine_name: String,
+    val pet_name: String
 )
 
 data class NextAppointment(
@@ -142,7 +149,13 @@ data class HistoryItem(
     val prescriptions: String?,
     val recommendations: String?,
     val category_id: Int,
-    val status_name: String?
+    val status_name: String?,
+    val medical_record_id: Int?,
+    val vaccination_id: Int?,
+    val vaccine_name: String?,
+    val next_vaccination_date: String?,
+    val photo_key: String?,
+    val walk_comment: String?
 )
 
 data class CancelAppointmentRequest(

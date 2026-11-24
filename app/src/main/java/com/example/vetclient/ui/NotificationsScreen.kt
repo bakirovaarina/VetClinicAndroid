@@ -31,11 +31,26 @@ class NotificationsViewModel : ViewModel() {
         isLoading = true
         viewModelScope.launch {
             try {
+                // 1. Загружаем уведомления из БД
                 val response = ApiClient.apiService.getNotifications(userId)
                 if (response.isSuccessful) {
                     notifications = response.body() ?: emptyList()
-                } else {
-                    message = "Ошибка загрузки"
+                }
+
+                // 2. Добавляем напоминания о вакцинации (если есть)
+                val homeResponse = ApiClient.apiService.getHomeData(userId)
+                if (homeResponse.isSuccessful) {
+                    val reminder = homeResponse.body()?.next_reminder
+                    if (reminder != null) {
+                        val note = UserNotification(
+                            id = -1, // временный ID
+                            title = "Напоминание о вакцинации",
+                            text = "Питомцу ${reminder.pet_name} нужно сделать повторную вакцинацию (${reminder.vaccine_name}) до ${reminder.date}.",
+                            type = "vaccination",
+                            date = reminder.date
+                        )
+                        notifications = notifications + note
+                    }
                 }
             } catch (e: Exception) {
                 message = "Нет связи с сервером"
